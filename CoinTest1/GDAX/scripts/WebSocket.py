@@ -49,7 +49,7 @@ class WebSocketClient(object):
 
   def writeData(self):
     try:
-      helper.writeData(self.data,'data.file')
+      helper.writeFile(self.data,self.config['File_Name']['datafile'])
     except Exception as e:
       log.error(str(e))
 
@@ -59,10 +59,9 @@ def main():
   """
 
   config = helper.readConfig()
-  print(config)
 
-  PyLogger(config['File_Name']['logfile'])
-  client = WebSocketClient('a')
+  PyLogger(config['File_Path']['log'] + config['File_Name']['logfile'])
+  client = WebSocketClient(config)
   client.subscribe()
   client.receiveData(1)
   client.stop()

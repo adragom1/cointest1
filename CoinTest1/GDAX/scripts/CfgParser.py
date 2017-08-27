@@ -1,6 +1,7 @@
 import configparser
 import re
 import os
+import sys
 import logging as log
 from copy import deepcopy
 
@@ -51,6 +52,9 @@ class CfgParser(object):
           if includes.values:
             self.readFileIncludes(include.values())
     except Exception as e:
+      exc_type, exc_obj, exc_tb = sys.exc_info()
+      fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+      print(exc_type, fname, exc_tb.tb_lineno)
       log.error(str(e))
 
   def readFiles(self,files):
@@ -63,17 +67,21 @@ class CfgParser(object):
           self.config.remove_section(section)
         self.sections = []
         self.config.read(self.path + file)
-        if section not in self.sections():
-          self.sections.append(section)
-        if section in self.finalConfig:
-          sectionMap = self.configSectionMap(section)
-          for key in sectionMap:
-            if key not in self.finalConfig[section]:
-              self.finalConfig[section][key] = sectionMap[key]
-            else:
-              self.finalConfig[section] = self.configSectionMap(section)
-        self.applyInterpolation()	
+        for section in self.config.sections():
+          if section not in self.sections:
+            self.sections.append(section)
+          if section in self.finalConfig:
+            sectionMap = self.configSectionMap(section)
+            for key in sectionMap:
+              if key not in self.finalConfig[section]:
+                self.finalConfig[section][key] = sectionMap[key]
+          else:
+            self.finalConfig[section] = self.configSectionMap(section)
+          self.applyInterpolation()	
     except Exception as e:
+      exc_type, exc_obj, exc_tb = sys.exc_info()
+      fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+      print(exc_type, fname, exc_tb.tb_lineno)
       log.error(str(e))	
 		
   def getSections(self):
@@ -95,8 +103,11 @@ class CfgParser(object):
         except:
           log.error()
           dict1[option] = None
-          return dict1
+      return dict1
     except Exception as e:
+      exc_type, exc_obj, exc_tb = sys.exc_info()
+      fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+      print(exc_type, fname, exc_tb.tb_lineno)
       log.error(str(e))	
 
   def logConfig(self):
@@ -109,7 +120,7 @@ class CfgParser(object):
     """
 	
     try:
-      while '$[' in value:
+      while '${' in value:
         occurence = re.search('\$\{(.+?)\}',value).group(1)
         value = value.replace('${' + occurence + '}', os.environ[occurence])
       return value		
@@ -130,7 +141,7 @@ class CfgParser(object):
         else:
           value = value.replace('$[' + occurence + ']' + ' Not Found')
           log.info('Could not find reference to section=' + sect + ', var=' + var.lower())
-        return value
+      return value
     except Exception as e:
       log.error(str(e))
 
@@ -146,9 +157,11 @@ class CfgParser(object):
           requiredSections[section] = self.finalConfig[section]
         else:
           log.info('Could not find section=' + section)
-      print(requiredSections)
       return requiredSections
     except Exception as e:
+      exc_type, exc_obj, exc_tb = sys.exc_info()
+      fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+      print(exc_type, fname, exc_tb.tb_lineno)
       log.error(str(e))
 
   def applyInterpolation(self):
@@ -157,13 +170,16 @@ class CfgParser(object):
     """
 	
     try:
-      for section,variable in self.finalConfig.iteritems():
-        for key,val in variable.iteritems():
-          if '$' in val:
-            val = self.replaceEnv(val)
-            val = self.replaceCSR(val)
-            variable[key] = val
+      for section,variable in self.finalConfig.items():
+        for key,value in variable.items():
+          if '$' in value:
+            value = self.replaceEnv(value)
+            value = self.replaceCSR(value)
+            variable[key] = value
     except Exception as e:
+      exc_type, exc_obj, exc_tb = sys.exc_info()
+      fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+      print(exc_type, fname, exc_tb.tb_lineno)
       log.error(str(e))
 	  
   def findIncludes(self):
@@ -179,6 +195,9 @@ class CfgParser(object):
             includeFiles[section] = val.lower()  
       return includeFiles
     except Exception as e:
+      exc_type, exc_obj, exc_tb = sys.exc_info()
+      fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+      print(exc_type, fname, exc_tb.tb_lineno)
       log.error(str(e))
 
 def main():

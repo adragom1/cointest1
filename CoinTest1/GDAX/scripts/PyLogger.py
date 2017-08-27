@@ -13,8 +13,8 @@ class PyLogger(object):
 #    self.handler.setFormatter(self.formatter)
 #    self.logger.addHandler(self.handler)
   
-  def __init__(self,filename):
-    filename = filename + "." + str(time.time())
+  def __init__(self,file):
+    filename = file + "." + str(time.time())
     logging.basicConfig(format="[%(filename)s:%(lineno)s - %(funcName)20s() ]%(asctime)s: %(message)s",
                         level=os.environ["LOGLEVEL"],
                         filename=filename)
