@@ -9,11 +9,12 @@ from PyLogger import PyLogger
 
 class WebSocketClient(object):
 
-  def __init__(self,config):
+  def __init__(self,args,config):
+    self.args   = args
     self.config = config
-    self.feed = "wss://ws-feed.gdax.com"
+    self.feed   = "wss://ws-feed.gdax.com"
     self.productList = ["BTC-USD"]
-    self.data = []
+    self.data   = []
 
   def subscribe(self):
     try:
@@ -32,8 +33,8 @@ class WebSocketClient(object):
       while True:
         result = self.ws.recv()
         result = json.loads(result)
-#        print ("Received '%s'" % result)
         self.data.append(result)
+#        self.writeData(result)
         if period:
           if time.time() > (start + period):
             print("Stopping after " + str(period) + "seconds")
@@ -49,7 +50,7 @@ class WebSocketClient(object):
 
   def writeData(self):
     try:
-      helper.writeFile(self.data,self.config['File_Name']['datafile'])
+      helper.writeToFile(self.data,self.config['File_Name']['datafile'])
     except Exception as e:
       log.error(str(e))
 
@@ -58,14 +59,20 @@ def main():
   Main to exemplify usage
   """
 
+  args   = helper.parseArgs()
   config = helper.readConfig()
 
   PyLogger(config['File_Path']['log'] + config['File_Name']['logfile'])
-  client = WebSocketClient(config)
+  client = WebSocketClient(args,config)
   client.subscribe()
-  client.receiveData(1)
-  client.stop()
+
+  period = 0
+  if args.period:
+    period = args.period 
+  client.receiveData(period)
+
   client.writeData()
+  client.stop()
 
 if __name__=='__main__':
   main()  
